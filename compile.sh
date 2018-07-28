@@ -44,6 +44,7 @@ case $OPTION in
 		echo "Please tell me which modules to install."
 		echo "If you select none, Nginx will be installed with its default modules."
 		echo ""
+		while [[ $PAGESPEED != "y" && $PAGESPEED != "n" ]]; do
 		read -p "       PageSpeed $NPS_VER [y/n]: " -e PAGESPEED
 		done
 		while [[ $BROTLI != "y" && $BROTLI != "n" ]]; do
@@ -69,7 +70,7 @@ case $OPTION in
 		echo "   1) System's OpenSSL ($(openssl version | cut -c9-14))"
 		echo "   2) OpenSSL $OPENSSL_VER from source"
 		echo ""
-		while [[ $SSL != "1" && $SSL != "2"]]; do
+		while [[ $SSL != "1" && $SSL != "2" ]]; do
 			read -p "Select an option [1-2]: " SSL
 		done
 		case $SSL in
@@ -437,7 +438,6 @@ case $OPTION in
 			echo "       Installation log: /tmp/nginx-compile.log"
 			echo ""
 		exit
-		;;
 		2) # Uninstall Nginx
 			while [[ $CONF !=  "y" && $CONF != "n" ]]; do
 				read -p "       Remove configuration files ? [y/n]: " -e CONF
