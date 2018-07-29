@@ -67,8 +67,8 @@ case $OPTION in
 		while [[ $CACHEPURGE != "y" && $CACHEPURGE != "n" ]]; do
 			read -p "       ngx_cache_purge [y/n]: " -e CACHEPURGE
 		done
-		while [[ $SSL != "1" && $SSL != "2" ]]; do
-			read -p "  OpenSSL $OPENSSL_VER [y/n]" -e SSL
+		while [[ $OPENSSL != "y" && $OPENSSL != "n" ]]; do
+			read -p "  OpenSSL $OPENSSL_VER [y/n]" -e OPENSSL
 		done
 	esac
 	echo ""
