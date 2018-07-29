@@ -59,7 +59,7 @@ case $OPTION in
 			read -p "       PCRE [y/n]: " -e PCRE
 		done
 		while [[ $ZLIB != "y" && $ZLIB != "n" ]]; do
-			read -p "       zlib [y/n]: " -e zlib
+			read -p "       zlib [y/n]: " -e ZLIB
 		done
 		while [[ $TCP != "y" && $TCP != "n" ]]; do
 			read -p "       Cloudflare's TLS Dynamic Record Resizing patch [y/n]: " -e TCP
