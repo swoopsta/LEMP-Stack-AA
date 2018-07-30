@@ -11,7 +11,6 @@ if [[ "$EUID" -ne 0 ]]; then
   echo -e "${CRED}Sorry, you need to run this as root${CEND}"
   exit 1
 fi
-
 # Variables
 NGINX_MAINLINE_VER=1.15.2
 NGINX_STABLE_VER=1.14.0
@@ -22,9 +21,10 @@ LIBRESSL_VER=2.7.4
 OPENSSL_VER=1.1.0h
 # Clear log file
 rm /tmp/nginx-compile.log
+
 clear
 echo ""
-echo "What are we gonna do today?"
+echo "This script will setup Nginx for my LEMP stack"
 echo ""
 echo "What do you want to do?"
 echo "   1) Install or update Nginx"
@@ -35,6 +35,7 @@ echo ""
 while [[ $OPTION !=  "1" && $OPTION != "2" && $OPTION != "3" && $OPTION != "4" ]]; do
 	read -p "Select an option [1-4]: " OPTION
 done
+
 case $OPTION in
   1)
   echo ""

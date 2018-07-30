@@ -16,7 +16,6 @@ fi
 NGINX_VER=1.15.2
 OPENSSL_VER=1.1.0h
 HEADERMOD_VER=0.33
-PCRE_VER=8.42
 ZLIB_VER=1.2.11
 NPS_VER=1.13.35.2
 
@@ -36,6 +35,7 @@ echo ""
 while [[ $OPTION !=  "1" && $OPTION != "2" && $OPTION != "3" && $OPTION != "4" ]]; do
 	read -p "Select an option [1-4]: " OPTION
 done
+
 case $OPTION in
 	1)
 		echo ""
@@ -43,6 +43,21 @@ case $OPTION in
 		echo ""
 		echo "This script will build Nginx with some optional modules and create a deb package file"
 		echo ""
+		echo "Do you want to install Nginx stable or mainline?"
+		echo "   1) Stable $NGINX_STABLE_VER"
+		echo "   2) Mainline $NGINX_MAINLINE_VER"
+		echo ""
+		while [[ $NGINX_VER != "1" && $NGINX_VER != "2" ]]; do
+			read -p "Select an option [1-2]: " NGINX_VER
+		done
+		case $NGINX_VER in
+			1)
+			NGINX_VER=$NGINX_STABLE_VER
+			;;
+			2)
+			NGINX_VER=$NGINX_MAINLINE_VER
+			;;
+		esac
 		echo "Please tell me which modules to install."
 		echo "If you select none, Nginx will be installed with its default modules."
 		echo ""
@@ -313,10 +328,7 @@ case $OPTION in
 	if [[ "$HEADERMOD" = 'y' ]]; then
 		NGINX_MODULES=$(echo $NGINX_MODULES; echo "--add-module=/usr/local/src/nginx/modules/headers-more-nginx-module-${HEADERMOD_VER}")
 	fi
-	# zlib
-	if [[ "$ZLIB" = 'y' ]]; then
-		NGINX_MODULES=$(echo $NGINX_MODULES; echo "--with-zlib=/usr/local/src/nginx/modules/zlib-${ZLIB_VER}")
-	fi
+
 	# OpenSSL
 	if [[ "$OPENSSL" = 'y' ]]; then
 		NGINX_MODULES=$(echo $NGINX_MODULES; echo "--with-openssl=/usr/local/src/nginx/modules/openssl-${OPENSSL_VER}")
@@ -388,7 +400,6 @@ case $OPTION in
 		if [[ ! -d /var/cache/nginx ]]; then
 			mkdir -p /var/cache/nginx
 		fi
-		# Create directories per Wordpress Best Practices.
 		if [[ ! -d /etc/nginx/sites-available ]]; then
 			mkdir -p /etc/nginx/sites-available
 		fi
