@@ -13,12 +13,13 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 # Variables - Check the URLs in the README for the most recent versions
-NGINX_VER=1.15.2
+NGINX_MAINLINE_VER=1.15.2
 NGINX_STABLE_VER=1.14.0
 OPENSSL_VER=1.1.0h
 HEADERMOD_VER=0.33
 ZLIB_VER=1.2.11
 NPS_VER=1.13.35.2
+PCRE_VER=8.42
 
 # Clear log file---------------------------------------------------------------
 rm /tmp/nginx-compile.log
@@ -536,6 +537,7 @@ case $OPTION in
 		# We're done !
 		echo ""
 		echo -e "       ${CGREEN}Installation successful !${CEND}"
+		echo -e "       ${CGREEN}DEB installer is in $HOMR ${CEND}"
 		echo ""
 		echo "       Installation log: /tmp/nginx-compile.log"
 		echo ""
