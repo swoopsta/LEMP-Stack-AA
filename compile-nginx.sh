@@ -1,4 +1,5 @@
 #!/bin/bash
+# Version .001
 # Colors
 CSI="\033["
 CEND="${CSI}0m"
