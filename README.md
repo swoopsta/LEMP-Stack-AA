@@ -1,36 +1,40 @@
 <p align="center">
 <img src="https://www.adamayala.com/images/logo-100x100.png">
 </p>
-# LEMP-Stack-AA
-LEMP Stack with customized compiled version of NGINX and custom configs (Work In Progress)
+### **Nginx, PHP 7, MariaDB 10, FastCGI Cache, Brotli, HTTP2, PagespeedMod and CloudFlare For WordPress and other WebApps**
 
-## **WordPress LEMP Server on Ubuntu 16.04 Xenial**
-#### WordPress on Nginx, PHP 7, MariaDB 10, FastCGI Cache, Brotli, HTTP2, PagespeedMod and CloudFlare
+A LEMP Stack with customized compiled version of NGINX and custom configs (A constant work in progress) for the stack I use for all websites including WordPress. Using the latest versions of all available software. Development is in an LXC container on my home lab but the end product will but put on a Google Compute Instance so all instructions are subject to change. This repo assumes you are using a fresh install of Ubuntu 16.04 on a VPS. It also assumes you've taken steps to harden the install. I often check to see if the time zone is set correctly for timestamps. I also configure the locales (this is a must for anything compiled in Perl.) Following the instructions from your VPS provider is MUST DO.
 
-A constant work in progress for the stack I use for all websites including WordPress. Using the latest versions of all available software. Development is in an LXC container on my home lab but the end product will but put on a Google Compute Instance so all instructions are subject to change. This repo assumes you are using a fresh install of Ubuntu 16.04 on a VPS. It also assumes you've taken steps to harden the install. Following the instructions from your VPS provider is MUST DO.
-----------
+#### **Initial Setup**
 
-### **Basics**
-##### **Initial Setup**
+#### **GCC (Optional)**
+I want to take advantage of a more up to date compiler than what Ubuntu might have available by default. This gives us access to CPU-specific optimizations as well as other security and performance improvements that will help Nginx during the compile process.
+
+For this purpose-built server, we're I'm installing gcc-8 as it has significant performance optimizations for the Intel Skylake hardware that Google Compute instances use.
+
+I've written a script to do this in case you don't want to do it manually.
+```shell
+wget https://raw.githubusercontent.com/swoopsta/Upgrading-GCC-on-Ubuntu-LTS--12.04--14.04--16.04/master/gcc-install.sh
+chmod +x gcc-install.sh
+sudo ./gcc-install.sh
 ```
-sudo apt update && sudo apt upgrade -y && sudo apt dist-upgrade -y
-sudo apt install autotools-dev autoconf automake libtool build-essential checkinstall curl debhelper dh-systemd gcc git htop libbz2-dev libexpat-dev libgd2-noxpm-dev libgd2-xpm-dev libgeoip-dev libgoogle-perftools-dev libluajit-5.1-dev libmhash-dev libpam0g-dev libpcre3 libpcre3-dev libperl-dev libssl-dev libxslt1-dev make nano openssl po-debconf software-properties-common sudo tar unzip wget zlib1g zlib1g-dbg zlib1g-dev uuid-dev -y
-sudo locale-gen en_US.UTF-8
-export LANG=en_US.UTF-8
+Then test the version executed with the gcc command. You should see gcc version 8 is now as the default and an upgade will clean up.
+```shell
+gcc -v
+apt update && apt upgrade -y
 ```
 ----------
+### **Building Nginx**
+I prefer using the **Mainline** version of Nginx rather than the **Stable** version. If you want the Stable version, you can choose it from the script.
 
-### **Nginx**
-I prefer using the **Mainline** version of Nginx rather than the **Stable** version. If you want the Stable version, change the version in the code below to whatever the latest Stable release is.
+I'm going to be compiling Nginx from source since I want to utilize some custom modules and use the latest version of LibreSSL or OpenSSL for HHTP2 support. This really depends on what the LEMP stack will be used for.
 
-I'm going to be compiling Nginx from source since I want to utilize some custom modules and use the latest version of OpenSSL for HHTP2 support.
-
-##### **Downloading Nginx**
-I've built a script to do the below so I need to  download the latest versions of Nginx and the various Nginx modules I'm using. Before going any further, you'll want to check the links below to ensure that you're downloading the latest version. Don't trust that the versions you see listed below are the latest releases. Make sure to change them in the compile.sh script in the variables section.
+I've built a script to do the below so I need to download the latest versions of Nginx and the various Nginx modules I'm using. Before going any further, I'll want to check the links below to ensure that I'm downloading the latest version. Don't trust that the versions you see listed below are the latest releases. Make sure to change them in the compile.sh script in the variables section.
 
 ###### Nginx Server Software:
 * [Nginx](http://nginx.org/en/download.html)
 * [OpenSSL](https://www.openssl.org/source/)
+* [LibreSSL](http://www.libressl.org/)
 * [Headers More Module](https://github.com/openresty/headers-more-nginx-module/tags)
 * [Nginx Cache Purge Module](http://labs.frickle.com/nginx_ngx_cache_purge/)
 * [PCRE](https://ftp.pcre.org/pub/pcre/)
@@ -39,25 +43,26 @@ I've built a script to do the below so I need to  download the latest versions o
 * [Brotli compression algorithm](https://github.com/eustas/ngx_brotli)
 * [Cloudflares TLS Dynamic Records Resizing patch](https://github.com/cloudflare/sslconfig/blob/master/patches/nginx__1.11.5_dynamic_tls_records.patch)
 
-##### **Google's Brotli Compression & PagespeedMod**
-I'm using Brotli for compression. Brotli will take priority over gzip when enabled. CloudFlare supports Brotli so I'll take advantage of it. You can read more about Brotli at [https://github.com/google/brotli](https://github.com/google/brotli). I'm using a forked version that's more up to date.
+###### Google's Brotli Compression & PagespeedMod
+I'm using Brotli for compression. Brotli will take priority over gzip when enabled. CloudFlare supports Brotli so I'll take advantage of it. You can read more about Brotli at [https://github.com/google/brotli](https://github.com/google/brotli). I'm using a forked version that's more up to date. PagespeedMod is another Google project that I like to include because of it's flexibility.
 
-##### **Nginx Module Reference**
+###### Nginx Module Reference
 Since we're compiling Nginx from source, we're going to be taking advantage of the fact that we can trim some default modules that I don't think I'll use. For your reference, we've included some helpful links that will get you up to speed on Nginx modules. If there's a module that you'd like to add to the Nginx build, you can add it to the compile.sh script.
 
 * [Nginx: Default Modules](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/#modules-built-by-default)
 * [Nginx: Non-default Modules](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/#modules_not_default)
 * [Nginx: Third Party Modules](https://github.com/agile6v/awesome-nginx#third-modules)
 
-##### **Compiling Nginx**
-It's finally time to compile Nginx using the parts we've downloaded. If you're running version numbers that differ from the versions we had listed above, don't forget to change them inside the `./configure`.
+##### Compiling Nginx
+It's finally time to compile Nginx using the parts we've downloaded. If you're running version numbers that differ from the versions we had listed above, don't forget to change them inside the compile.sh script in the Variables section. The script is currently a work in progress. It will do its work in /usr/local/src/nginx/nginx-1.15.2 (version number).
+
+I like using `checkinstall` command rather than make. It tells the server to package our compiled source into a more easily managed .deb package file. Moving through the prompts, you can tell it not to list the installation files, and yes to exclude them from the package. Since Nginx updates quite frequently, doing this allows us to easily upgrade later on. To upgrade to the latest version, double check Nginx and module versions (as this document may not be up to date), then simply repeat the installation process above. Restart Nginx and you should be running the latest version.
+
+The script will install the SystemD service to handle bootup processing. If you feel the need to modify it use:
 ```
-cd /usr/src/nginx-1.15.1
-./configure --prefix=/usr/local/nginx --sbin-path=/usr/sbin/nginx --conf-path=/etc/nginx/nginx.conf --pid-path=/var/run/nginx.pid --lock-path=/var/lock/nginx.lock --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --http-fastcgi-temp-path=/var/lib/nginx/fastcgi --user=www-data --group=www-data --with-http_gunzip_module --with-http_gzip_static_module --with-http_realip_module --with-http_ssl_module --with-http_v2_module --with-pcre-jit --without-http_empty_gif_module --without-http_memcached_module --without-http_scgi_module --without-http_uwsgi_module --without-mail_imap_module --without-mail_pop3_module --without-mail_smtp_module --with-pcre=/usr/src/pcre-8.42 --with-zlib=/usr/src/zlib-1.2.11 --with-openssl=/usr/src/openssl-1.1.0h --add-module=/usr/src/ngx_cache_purge-2.3 --add-module=/usr/src/headers-more-nginx-module-0.33 --add-module=/usr/src/ngx_brotli
-sudo make
-sudo checkinstall
+sudo nano /lib/systemd/system/nginx.service
 ```
-Using the `checkinstall` command tells the server to package our compiled source into a more easily managed .deb package file. Moving through the prompts, you can tell it not to list the installation files, and yes to exclude them from the package. Since Nginx updates quite frequently, doing this allows us to easily upgrade later on. To upgrade to the latest version, double check Nginx and module versions (as this guide may not be up to date), then simply repeat the installation process above. Restart Nginx and you should be running the latest version.
+In the future, you can restart Nginx by typing `sudo service nginx restart`.
 
 Double check that we've got everything installed correctly by using the `nginx -Vv` command. This will also list all installed modules and your OpenSSL version.
 
@@ -71,54 +76,7 @@ sudo mkdir -p /etc/nginx/conf.d
 sudo mkdir -p /var/cache/nginx
 sudo mkdir -p /var/log/domains
 sudo chown -hR www-data:www-data /var/log/domains
-sudo rm -rf /etc/nginx/sites-enabled
-sudo rm -rf /etc/nginx/sites-available
 ```
-##### **Automatically Starting Nginx**
-Now that we've installed Nginx, we'll need to make it start up automatically each time the server reboots. Ubuntu 16.04 uses SystemD to handle bootup processing, so that's what we'll be working with.
-```
-sudo nano /lib/systemd/system/nginx.service
-```
-Now paste in the code below, then save.
-```
-# Stop dance for nginx
-# =======================
-#
-# ExecStop sends SIGSTOP (graceful stop) to the nginx process.
-# If, after 5s (--retry QUIT/5) nginx is still running, systemd takes control
-# and sends SIGTERM (fast shutdown) to the main process.
-# After another 5s (TimeoutStopSec=5), and if nginx is alive, systemd sends
-# SIGKILL to all the remaining processes in the process group (KillMode=mixed).
-#
-# nginx signals reference doc:
-# http://nginx.org/en/docs/control.html
-#
-[Unit]
-Description=A high performance web server and a reverse proxy server
-After=network.target
-
-[Service]
-Type=forking
-PIDFile=/run/nginx.pid
-ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;'
-ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;'
-ExecReload=/usr/sbin/nginx -g 'daemon on; master_process on;' -s reload
-ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid
-TimeoutStopSec=5
-KillMode=mixed
-
-[Install]
-WantedBy=multi-user.target
-```
-Finally, let's double check that it's working, and then turn on Nginx.
-```
-sudo systemctl enable nginx.service
-sudo systemctl start nginx.service
-sudo systemctl status nginx.service
-```
-
-In the future, you can restart Nginx by typing `sudo service nginx restart`.
-
 ----------
 
 ### **PHP 7**
