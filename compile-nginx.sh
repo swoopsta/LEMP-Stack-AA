@@ -447,13 +447,13 @@ case $OPTION in
 			exit 1
 		fi
 		# Compile Nginx-------------------------------------------------------------
-		echo -ne "       Compiling Nginx                [..]\r"
+		echo -ne "       Compiling Nginx-Patience grasshopper   [..]\r"
 		make -j $(nproc) >> /tmp/nginx-compile.log 2>&1
 		if [ $? -eq 0 ]; then
-			echo -ne "       Compiling Nginx                [${CGREEN}OK${CEND}]\r"
+			echo -ne "       Compiling Nginx-Patience grasshopper [${CGREEN}OK${CEND}]\r"
 			echo -ne "\n"
 		else
-			echo -e "       Compiling Nginx                [${CRED}FAIL${CEND}]"
+			echo -e "        Compiling Nginx-Patience grasshopper [${CRED}FAIL${CEND}]"
 			echo ""
 			echo "Please look at /tmp/nginx-compile.log"
 			echo ""
@@ -462,8 +462,8 @@ case $OPTION in
 		# Let's install it now -----------------------------------------------------
 		echo -ne "       Installing Nginx               [..]\r"
 		make install >> /tmp/nginx-compile.log 2>&1
-		# remove debugging symbols
 		strip -s /usr/sbin/nginx
+		# remove debugging symbols
 		if [ $? -eq 0 ]; then
 			echo -ne "       Installing Nginx               [${CGREEN}OK${CEND}]\r"
 			echo -ne "\n"
@@ -530,7 +530,6 @@ case $OPTION in
 		# Finished here-------------------------------------------------------------
 		echo ""
 		echo -e "       ${CGREEN}Installation successful !${CEND}"
-		echo -e "       ${CGREEN}DEB installer is in $HOMR ${CEND}"
 		echo ""
 		echo "       Installation log: /tmp/nginx-compile.log"
 		echo ""
@@ -571,7 +570,7 @@ case $OPTION in
 			TIMESTAMP=$(date +%F_%H-%M-%S)
 			mkdir $HOME/nginx-backup-$TIMESTAMP
 			mv /etc/nginx $HOME/nginx-backup-$TIMESTAMP
-			echo -ne "       Moving nginx directory to $HOME for safe keeping   [${CGREEN}OK${CEND}]\r"
+			echo -ne "       Moving /etc/nginx directory to $HOME for safe keeping   [${CGREEN}OK${CEND}]\r"
 			echo -ne "\n"
 		fi
 		# Remove logs --------------------------------------------------------------
@@ -598,7 +597,7 @@ case $OPTION in
 	;;
 	3) # Update the script
 		wget https://raw.githubusercontent.com/swoopsta/LEMP-Stack-AA/master/compile-nginx.sh -O compile-nginx.sh >> /tmp/nginx-compile.log 2>&1
-		chmod +x compile.sh
+		chmod +x compile-nginx.sh
 		echo ""
 		echo -e "${CGREEN}Update succcessful !${CEND}"
 		./compile.sh
