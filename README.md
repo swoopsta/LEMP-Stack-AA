@@ -1,6 +1,7 @@
 <p align="center">
 <img src="https://www.adamayala.com/images/logo-100x100.png">
 </p>
+
 ### **Nginx, PHP 7, MariaDB 10, FastCGI Cache, Brotli, HTTP2, PagespeedMod and CloudFlare For WordPress and other WebApps**
 
 A LEMP Stack with customized compiled version of NGINX and custom configs (A constant work in progress) for the stack I use for all websites including WordPress. Using the latest versions of all available software. Development is in an LXC container on my home lab but the end product will but put on a Google Compute Instance so all instructions are subject to change. This repo assumes you are using a fresh install of Ubuntu 16.04 on a VPS. It also assumes you've taken steps to harden the install. I often check to see if the time zone is set correctly for timestamps. I also configure the locales (this is a must for anything compiled in Perl.) Following the instructions from your VPS provider is MUST DO.
