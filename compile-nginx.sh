@@ -600,7 +600,7 @@ case $OPTION in
 		chmod +x compile-nginx.sh
 		echo ""
 		echo -e "${CGREEN}Update succcessful !${CEND}"
-		./compile.sh
+		./compile-nginx.sh
 		exit
 	;;
 	4) # Exit
