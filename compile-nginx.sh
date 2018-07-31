@@ -1,18 +1,31 @@
 #!/bin/bash
-# Version .001
+# Adam Ayala
+# https://github.com/swoopsta/LEMP-Stack-AA
+# Version 1.0
+# GNU General Public License v3.0
+# Compile Nginx with optional modules
+#-------------------------------------------------------------------------------
 # Colors
 CSI="\033["
 CEND="${CSI}0m"
 CRED="${CSI}1;31m"
 CGREEN="${CSI}1;32m"
-
-# Check root access------------------------------------------------------------
+# Check root access-------------------------------------------------------------
 if [[ "$EUID" -ne 0 ]]; then
 	echo -e "${CRED}Sorry, you need to run this as root${CEND}"
 	exit 1
 fi
-
-# Variables - Check the URLs in the README for the most recent versions
+# Versioning - Check the URLs in the README for the most recent versions--------
+# Nginx - http://nginx.org/en/download.html
+# OpenSSL - https://www.openssl.org/source/
+# LibreSSL - http://www.libressl.org/
+# Headers More Module - https://github.com/openresty/headers-more-nginx-module/tags
+# Nginx Cache Purge Module - http://labs.frickle.com/nginx_ngx_cache_purge/
+# PCRE - https://ftp.pcre.org/pub/pcre/
+# zlib - https://www.zlib.net/
+# Google's PagespeedMod - https://github.com/pagespeed/ngx_pagespeed
+# Brotli compression algorithm - https://github.com/eustas/ngx_brotli
+# Cloudflares TLS Dynamic Records Resizing patch - https://github.com/cloudflare/sslconfig/blob/master/patches/nginx__1.11.5_dynamic_tls_records.patch
 NGINX_MAINLINE_VER=1.15.2
 NGINX_STABLE_VER=1.14.0
 OPENSSL_VER=1.1.0h
@@ -20,13 +33,12 @@ HEADERMOD_VER=0.33
 ZLIB_VER=1.2.11
 NPS_VER=1.13.35.2
 PCRE_VER=8.42
-
 # Clear log file---------------------------------------------------------------
 rm /tmp/nginx-compile.log
-rm -rf /usr/local/src/nginx #debugging
+rm -rf /usr/local/src/nginx
 clear
 echo ""
-echo "Welcome to the nginx-compile script."
+echo "Welcome to the Nginx compile script."
 echo ""
 echo "What do you want to do?"
 echo "   1) Install or update Nginx"
@@ -106,18 +118,16 @@ case $OPTION in
 		echo ""
 		read -n1 -r -p "Nginx is ready to be compiled, press any key to continue..."
 		echo ""
-
-		# Cleanup-----------------------------------------------------------------------
-		# These directories & files should be deleted for debugging purposes
+		# Cleanup-------------------------------------------------------------------
+		# These directories & files should be deleted at the end
 		rm -r /usr/local/src/nginx/ >> /tmp/nginx-compile.log 2>&1
 		mkdir -p /usr/local/src/nginx/modules >> /tmp/nginx-compile.log 2>&1
-
-		# Dependencies------------------------------------------------------------------
+		# Dependencies--------------------------------------------------------------
 		clear
 		echo -ne "    Installing and/or upgrading dependencies      [..]\r"
 		apt update && apt upgrade -y >> /tmp/nginx-compile.log 2>&1
 		apt install autotools-dev autoconf automake libtool build-essential checkinstall curl debhelper dh-systemd gcc git htop libbz2-dev libexpat-dev libgd2-noxpm-dev libgd2-xpm-dev libgeoip-dev libgoogle-perftools-dev libluajit-5.1-dev libmhash-dev libpam0g-dev libpcre3 libpcre3-dev libperl-dev libssl-dev libxslt1-dev make nano openssl po-debconf software-properties-common sudo tar unzip wget zlib1g zlib1g-dbg zlib1g-dev uuid-dev -y
-		# Generate locales to compile with perl
+		# Generate locales to compile with perl-------------------------------------
 		locale-gen en_US.UTF-8
 		export LANG=en_US.UTF-8
 		if [ $? -eq 0 ]; then
@@ -130,7 +140,7 @@ case $OPTION in
 			echo ""
 			exit 1
 		fi
-		# PageSpeed---------------------------------------------------------------------
+		# PageSpeed-----------------------------------------------------------------
 		if [[ "$PAGESPEED" = 'y' ]]; then
 			cd /usr/local/src/nginx/modules
 			# Download and extract of PageSpeed module
@@ -153,8 +163,7 @@ case $OPTION in
 				exit 1
 			fi
 		fi
-
-		#Brotli-------------------------------------------------------------------------
+		#Brotli---------------------------------------------------------------------
 		if [[ "$BROTLI" = 'y' ]]; then
 			cd /usr/local/src/nginx/modules
 			echo -ne "       Downloading ngx_brotli         [..]\r"
@@ -174,7 +183,7 @@ case $OPTION in
 			fi
 		fi
 
-		# More Headers------------------------------------------------------------------
+		# More Headers--------------------------------------------------------------
 		if [[ "$HEADERMOD" = 'y' ]]; then
 			cd /usr/local/src/nginx/modules
 			echo -ne "       Downloading ngx_headers_more   [..]\r"
@@ -191,8 +200,7 @@ case $OPTION in
 				exit 1
 			fi
 		fi
-
-		# PCRE-------------------------------------------------------------------------
+		# PCRE----------------------------------------------------------------------
 		if [[ "$PCRE" = 'y' ]]; then
 		cd /usr/local/src/nginx/modules
 		echo -ne "       Downloading PCRE     [..]\r"
@@ -209,7 +217,7 @@ case $OPTION in
 			exit 1
 			fi
 		fi
-	# Cache Purge------------------------------------------------------------------
+	# Cache Purge-----------------------------------------------------------------
 		if [[ "$CACHEPURGE" = 'y' ]]; then
 			cd /usr/local/src/nginx/modules
 			echo -ne "       Downloading ngx_cache_purge    [..]\r"
@@ -225,7 +233,7 @@ case $OPTION in
 				exit 1
 			fi
 		fi
-		# zlib--------------------------------------------------------------------------
+		# zlib----------------------------------------------------------------------
 		if [[ "$ZLIB" = 'y' ]]; then
 			cd /usr/local/src/nginx/modules
 			echo -ne "       Downloading zlib           [..]\r"
@@ -276,7 +284,7 @@ case $OPTION in
 				echo ""
 				exit 1
 			fi
-			# LibreSSL install
+			# LibreSSL install -------------------------------------------------------
 			echo -ne "       Installing LibreSSL            [..]\r"
 			make install-strip -j $(nproc) >> /tmp/nginx-compile.log 2>&1
 			if [ $? -eq 0 ]; then
@@ -290,7 +298,7 @@ case $OPTION in
 				exit 1
 			fi
 		fi
-# OpenSSL----------------------------------------------------------------------
+		# OpenSSL-------------------------------------------------------------------
 		if [[ "$OPENSSL" = 'y' ]]; then
 			cd /usr/local/src/nginx/modules
 			echo -ne "       Downloading OpenSSL            [..]\r"
@@ -320,7 +328,7 @@ case $OPTION in
 				exit 1
 			fi
 		fi
-		# Download and extract of Nginx source code-------------------------------------
+		# Download and extract Nginx source code of chosen version------------------
 		cd /usr/local/src/nginx/
 		echo -ne "       Downloading Nginx              [..]\r"
 		wget http://nginx.org/download/nginx-${NGINX_VER}.tar.gz
@@ -336,17 +344,17 @@ case $OPTION in
 			echo ""
 			exit 1
 		fi
-		# Note:----------------------------------------------------------------------
+		# Note:---------------------------------------------------------------------
 		# As the default nginx.conf does not work
 		# I'll download a clean and working conf from my GitHub.
-		# I'll only do it only if it does not already exist (in case of update for instance)
+		# I'll only do it only if it does not already exist
 		if [[ ! -e /etc/nginx/nginx.conf ]]; then
 				mkdir -p /etc/nginx
 				cd /etc/nginx
 		wget https://raw.githubusercontent.com/swoopsta/LEMP-Stack-AA/master/conf/nginx.conf >> /tmp/nginx-compile.log 2>&1
 		fi
 		cd /usr/local/src/nginx/nginx-${NGINX_VER}
-		# Modules configuration
+		# Modules configuration-----------------------------------------------------
 		# Common configuration
 		NGINX_OPTIONS="
 		--prefix=/etc/nginx \
@@ -362,7 +370,7 @@ case $OPTION in
 		--user=www-data \
 		--group=www-data \
 		--with-cc-opt=-Wno-deprecated-declarations"
-		# Modified Configuration
+		# Modified Configuration----------------------------------------------------
 		NGINX_MODULES="--without-http_ssi_module \
 		--without-http_scgi_module \
 		--without-http_uwsgi_module \
@@ -380,42 +388,35 @@ case $OPTION in
 		--with-http_slice_module \
 		--with-http_stub_status_module \
 		--with-http_realip_module"
-		# Optional modules
+		# Optional modules ---------------------------------------------------------
 		# LibreSSL
 		if [[ "$LIBRESSL" = 'y' ]]; then
 			NGINX_MODULES=$(echo $NGINX_MODULES; echo --with-openssl=/usr/local/src/nginx/modules/libressl-${LIBRESSL_VER})
 		fi
-
 		# PCRE
 		if [[ "$PCRE" = 'y' ]]; then
 			NGINX_MODULES=$(echo $NGINX_MODULES; echo --with-pcre=/usr/local/src/nginx/modules/pcre-${PCRE_VER})
 		fi
-
 		# PageSpeed
 		if [[ "$PAGESPEED" = 'y' ]]; then
 			NGINX_MODULES=$(echo $NGINX_MODULES; echo "--add-module=/usr/local/src/nginx/modules/incubator-pagespeed-ngx-${NPS_VER}-stable")
 		fi
-
 		# Brotli
 		if [[ "$BROTLI" = 'y' ]]; then
 			NGINX_MODULES=$(echo $NGINX_MODULES; echo "--add-module=/usr/local/src/nginx/modules/ngx_brotli")
 		fi
-
 		# More Headers
 		if [[ "$HEADERMOD" = 'y' ]]; then
 			NGINX_MODULES=$(echo $NGINX_MODULES; echo "--add-module=/usr/local/src/nginx/modules/headers-more-nginx-module-${HEADERMOD_VER}")
 		fi
-
 		# OpenSSL
 		if [[ "$OPENSSL" = 'y' ]]; then
 			NGINX_MODULES=$(echo $NGINX_MODULES; echo "--with-openssl=/usr/local/src/nginx/modules/openssl-${OPENSSL_VER}")
 		fi
-
 		# Cache Purge
 		if [[ "$CACHEPURGE" = 'y' ]]; then
 			NGINX_MODULES=$(echo $NGINX_MODULES; echo "--add-module=/usr/local/src/nginx/modules/ngx_cache_purge")
 		fi
-
 		# Cloudflare's TLS Dynamic Record Resizing patch
 		if [[ "$TCP" = 'y' ]]; then
 			echo -ne "       TLS Dynamic Records support    [..]\r"
@@ -432,8 +433,7 @@ case $OPTION in
 				exit 1
 			fi
 		fi
-
-		# Configure Nginx---------------------------------------------------------------
+		# Configure Nginx-----------------------------------------------------------
 		echo -ne "       Configuring Nginx              [..]\r"
 		./configure $NGINX_OPTIONS $NGINX_MODULES >> /tmp/nginx-compile.log 2>&1
 		if [ $? -eq 0 ]; then
@@ -446,8 +446,7 @@ case $OPTION in
 			echo ""
 			exit 1
 		fi
-
-		# Compile Nginx-----------------------------------------------------------------
+		# Compile Nginx-------------------------------------------------------------
 		echo -ne "       Compiling Nginx                [..]\r"
 		make -j $(nproc) >> /tmp/nginx-compile.log 2>&1
 		if [ $? -eq 0 ]; then
@@ -460,26 +459,22 @@ case $OPTION in
 			echo ""
 			exit 1
 		fi
-
-		# Let's build it now
-		echo -ne "       Building Deb Package               [..]\r"
-		checkinstall -y --pakdir=$HOME >> /tmp/nginx-compile.log 2>&1
-
+		# Let's install it now -----------------------------------------------------
+		echo -ne "       Installing Nginx               [..]\r"
+		make install >> /tmp/nginx-compile.log 2>&1
 		# remove debugging symbols
 		strip -s /usr/sbin/nginx
-
 		if [ $? -eq 0 ]; then
-			echo -ne "       Building Nginx               [${CGREEN}OK${CEND}]\r"
+			echo -ne "       Installing Nginx               [${CGREEN}OK${CEND}]\r"
 			echo -ne "\n"
 		else
-			echo -e "       Building Nginx               [${CRED}FAIL${CEND}]"
+			echo -e "       Installing Nginx               [${CRED}FAIL${CEND}]"
 			echo ""
 			echo "Please look at /tmp/nginx-compile.log"
 			echo ""
 			exit 1
 		fi
-
-		# Add an init script for systemd and logrotate
+		# Add an init script for systemd and logrotate------------------------------
 		# Using my systemd script and logrotate conf
 		if [[ ! -e /lib/systemd/system/nginx.service ]]; then
 			cd /lib/systemd/system/
@@ -487,30 +482,27 @@ case $OPTION in
 			# Enable nginx start at boot
 			systemctl enable nginx >> /tmp/nginx-compile.log 2>&1
 		fi
-
 		# Setup logrotate
 		if [[ ! -e /etc/logrotate.d/nginx ]]; then
 			cd /etc/logrotate.d/
 			wget https://raw.githubusercontent.com/swoopsta/LEMP-Stack-AA/master/conf/nginx-logrotate -O nginx >> /tmp/nginx-compile.log 2>&1
 		fi
-
-		# Create Nginx cache directory
+		# Create Nginx directories--------------------------------------------------
+		# Cache directory
 		if [[ ! -d /var/cache/nginx ]]; then
 			mkdir -p /var/cache/nginx
 		fi
-
 		# Make sites directories per Nginx best practices
+		# Note: Will add my own conf files & directories here soon
 		if [[ ! -d /etc/nginx/sites-available ]]; then
 			mkdir -p /etc/nginx/sites-available
 		fi
 		if [[ ! -d /etc/nginx/sites-enabled ]]; then
 			mkdir -p /etc/nginx/sites-enabled
 		fi
-
-		# Restart Nginx
+		# Restart Nginx-------------------------------------------------------------
 		echo -ne "       Restarting Nginx               [..]\r"
 		systemctl restart nginx >> /tmp/nginx-compile.log 2>&1
-
 		if [ $? -eq 0 ]; then
 			echo -ne "       Restarting Nginx               [${CGREEN}OK${CEND}]\r"
 			echo -ne "\n"
@@ -521,6 +513,7 @@ case $OPTION in
 			echo ""
 			exit 1
 		fi
+		# Pin APT in Nginx so as not to overwrite on update/upgrade-----------------
 		if [[ $(lsb_release -si) == "Debian" ]] || [[ $(lsb_release -si) == "Ubuntu" ]]
 		then
 			echo -ne "       Blocking nginx from APT        [..]\r"
@@ -529,12 +522,12 @@ case $OPTION in
 			echo -ne "       Blocking nginx from APT        [${CGREEN}OK${CEND}]\r"
 			echo -ne "\n"
 		fi
-		# Removing temporary Nginx and modules files
+		# Removing temporary Nginx and modules files--------------------------------
 		echo -ne "       Removing Nginx files           [..]\r"
 		rm -r /usr/local/src/nginx >> /tmp/nginx-compile.log 2>&1
 		echo -ne "       Removing Nginx files           [${CGREEN}OK${CEND}]\r"
 		echo -ne "\n"
-		# We're done !
+		# Finished here-------------------------------------------------------------
 		echo ""
 		echo -e "       ${CGREEN}Installation successful !${CEND}"
 		echo -e "       ${CGREEN}DEB installer is in $HOMR ${CEND}"
@@ -543,9 +536,9 @@ case $OPTION in
 		echo ""
 	exit
 	;;
-	2) # Uninstall Nginx
+	2) # Uninstall Nginx ---------------------------------------------------------
 		while [[ $CONF !=  "y" && $CONF != "n" ]]; do
-			read -p "       Remove configuration files ? [y/n]: " -e CONF
+			read -p "       Remove conf and Nginx directory ? [y/n]: " -e CONF
 		done
 		while [[ $LOGS !=  "y" && $LOGS != "n" ]]; do
 			read -p "       Remove logs files ? [y/n]: " -e LOGS
@@ -562,8 +555,7 @@ case $OPTION in
 			echo ""
 			exit 1
 		fi
-
-		# Removing Nginx files and modules files
+		# Removing Nginx files and modules files -----------------------------------
 		echo -ne "       Removing Nginx files           [..]\r"
 		rm -r /usr/local/src/nginx \
 		/usr/sbin/nginx* \
@@ -573,15 +565,16 @@ case $OPTION in
 		/etc/systemd/system/multi-user.target.wants/nginx.service >> /tmp/nginx-compile.log 2>&1
 		echo -ne "       Removing Nginx files           [${CGREEN}OK${CEND}]\r"
 		echo -ne "\n"
-
-		# Remove conf files
+		# Remove Nginx directory --------------------------------------------------------
 		if [[ "$CONF" = 'y' ]]; then
-			echo -ne "       Removing configuration files   [..]\r"
-			echo -ne "       Removing configuration files   [${CGREEN}OK${CEND}]\r"
+			echo -ne "       Moving nginx directory to $HOME for safe keeping   [..]\r"
+			TIMESTAMP=$(date +%F_%H-%M-%S)
+			mkdir $HOME/nginx-backup-$TIMESTAMP
+			mv /etc/nginx $HOME/nginx-backup-$TIMESTAMP
+			echo -ne "       Moving nginx directory to $HOME for safe keeping   [${CGREEN}OK${CEND}]\r"
 			echo -ne "\n"
 		fi
-
-		# Remove logs
+		# Remove logs --------------------------------------------------------------
 		if [[ "$LOGS" = 'y' ]]; then
 			echo -ne "       Removing log files             [..]\r"
 			rm -r /var/log/nginx >> /tmp/nginx-compile.log 2>&1
@@ -595,7 +588,7 @@ case $OPTION in
 			echo -ne "       Unblock nginx package from APT [${CGREEN}OK${CEND}]\r"
 			echo -ne "\n"
 		fi
-		# Finished
+		# Finished here ------------------------------------------------------------
 		echo ""
 		echo -e "       ${CGREEN}Uninstallation successful !${CEND}"
 		echo ""
@@ -604,7 +597,7 @@ case $OPTION in
 	exit
 	;;
 	3) # Update the script
-		wget https://raw.githubusercontent.com/swoopsta/LEMP-Stack-AA/master/compile.sh -O compile.sh >> /tmp/nginx-compile.log 2>&1
+		wget https://raw.githubusercontent.com/swoopsta/LEMP-Stack-AA/master/compile-nginx.sh -O compile-nginx.sh >> /tmp/nginx-compile.log 2>&1
 		chmod +x compile.sh
 		echo ""
 		echo -e "${CGREEN}Update succcessful !${CEND}"

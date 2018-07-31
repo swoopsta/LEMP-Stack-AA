@@ -5,7 +5,7 @@
 
 A LEMP Stack with customized compiled version of NGINX and custom configs (A constant work in progress) for the stack I use for all websites including WordPress. Using the latest versions of all available software. Development is in an LXC container on my home lab but the end product will but put on a Google Compute Instance so all instructions are subject to change. This repo assumes you are using a fresh install of Ubuntu 16.04 on a VPS. It also assumes you've taken steps to harden the install. I often check to see if the time zone is set correctly for timestamps. I also configure the locales (this is a must for anything compiled in Perl.) Following the instructions from your VPS provider is MUST DO.
 
-#### **Initial Setup**
+### **Initial Setup**
 
 #### **GCC (Optional)**
 I want to take advantage of a more up to date compiler than what Ubuntu might have available by default. This gives us access to CPU-specific optimizations as well as other security and performance improvements that will help Nginx during the compile process.
@@ -29,7 +29,7 @@ I prefer using the **Mainline** version of Nginx rather than the **Stable** vers
 
 I'm going to be compiling Nginx from source since I want to utilize some custom modules and use the latest version of LibreSSL or OpenSSL for HHTP2 support. This really depends on what the LEMP stack will be used for.
 
-I've built a script to do the below so I need to download the latest versions of Nginx and the various Nginx modules I'm using. Before going any further, I'll want to check the links below to ensure that I'm downloading the latest version. Don't trust that the versions you see listed below are the latest releases. Make sure to change them in the compile.sh script in the variables section.
+I've built a script to do the below so I need to download the latest versions of Nginx and the various Nginx modules I'm using. Before going any further, I'll want to check the links below to ensure that I'm downloading the latest version. Don't trust that the versions you see listed below are the latest releases. Make sure to change them in the compile-nginx.sh script in the variables section.
 
 ###### Nginx Server Software:
 * [Nginx](http://nginx.org/en/download.html)
@@ -47,16 +47,16 @@ I've built a script to do the below so I need to download the latest versions of
 I'm using Brotli for compression. Brotli will take priority over gzip when enabled. CloudFlare supports Brotli so I'll take advantage of it. You can read more about Brotli at [https://github.com/google/brotli](https://github.com/google/brotli). I'm using a forked version that's more up to date. PagespeedMod is another Google project that I like to include because of it's flexibility.
 
 ###### Nginx Module Reference
-Since we're compiling Nginx from source, we're going to be taking advantage of the fact that we can trim some default modules that I don't think I'll use. For your reference, we've included some helpful links that will get you up to speed on Nginx modules. If there's a module that you'd like to add to the Nginx build, you can add it to the compile.sh script.
+Since we're compiling Nginx from source, we're going to be taking advantage of the fact that we can trim some default modules that I don't think I'll use. For your reference, we've included some helpful links that will get you up to speed on Nginx modules. If there's a module that you'd like to add to the Nginx build, you can add it to the compile-nginx.sh script.
 
 * [Nginx: Default Modules](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/#modules-built-by-default)
 * [Nginx: Non-default Modules](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/#modules_not_default)
 * [Nginx: Third Party Modules](https://github.com/agile6v/awesome-nginx#third-modules)
 
 ##### Compiling Nginx
-It's finally time to compile Nginx using the parts we've downloaded. If you're running version numbers that differ from the versions we had listed above, don't forget to change them inside the compile.sh script in the Variables section. The script is currently a work in progress. It will do its work in /usr/local/src/nginx/nginx-1.15.2 (version number).
+It's finally time to compile Nginx using the parts we've downloaded. If you're running version numbers that differ from the versions we had listed above, don't forget to change them inside the compile-nginx.sh script in the `Versions` section. The script is currently a work in progress. It will do its work in /usr/local/src/nginx/nginx-1.15.2 (version number).
 
-I like using `checkinstall` command rather than make. It tells the server to package our compiled source into a more easily managed .deb package file. Moving through the prompts, you can tell it not to list the installation files, and yes to exclude them from the package. Since Nginx updates quite frequently, doing this allows us to easily upgrade later on. To upgrade to the latest version, double check Nginx and module versions (as this document may not be up to date), then simply repeat the installation process above. Restart Nginx and you should be running the latest version.
+Moving through the prompts, choose modules to include/exclude them from the package. To upgrade to the latest version, double check Nginx and module versions (as this document may not be up to date), then simply repeat the installation process above.
 
 The script will install the SystemD service to handle bootup processing. If you feel the need to modify it use:
 ```
