@@ -4,7 +4,7 @@
 
 ### **Nginx, PHP 7, MariaDB 10, FastCGI Cache, Brotli, HTTP2, PagespeedMod and CloudFlare For WordPress and other WebApps**
 
-A LEMP Stack with customized compiled version of NGINX and custom configs (A constant work in progress) for the stack I use for all websites including WordPress. Using the latest versions of all available software. Development is in an LXC container on my home lab but the end product will but put on a Google Compute Instance so all instructions are subject to change. This repo assumes you are using a fresh install of Ubuntu 16.04 on a VPS. It also assumes you've taken steps to harden the install. I often check to see if the time zone is set correctly for timestamps. I also configure the locales (this is a must for anything compiled in Perl.) Following the instructions from your VPS provider is MUST DO.
+I wanted to build a customized LEMP stack that would work on a REALLY small VPS. 10gb/1gb RAM/1 VCPU & be able to handle 2000-3000 hits a day. It's more for a personal blog or resume. I also wanted a  LEMP Stack with customized compiled version of NGINX and custom configs (A constant work in progress) for the stack I use for all websites including WordPress. Using the latest versions of all available software. Development on a Google Compute Instance set to match most VPS's out there. All instructions are subject to change & are not guarantee to make your VPS explode. This repo assumes you are using a fresh install of Ubuntu 16.04 on a VPS. It also assumes you've taken steps to harden the install. I often check to see if the time zone is set correctly for timestamps. I also configure the locales (this is a must for anything compiled in Perl.) Following the instructions from your VPS provider is MUST DO. I'll have another repo soon to script this project for a staging environment once I've got this one tuned to my liking.
 
 ### **Initial Setup**
 
@@ -48,7 +48,7 @@ I've built a script to do the below so I need to download the latest versions of
 I'm using Brotli for compression. Brotli will take priority over gzip when enabled. CloudFlare supports Brotli so I'll take advantage of it. You can read more about Brotli at [https://github.com/google/brotli](https://github.com/google/brotli). I'm using a forked version that's more up to date. PagespeedMod is another Google project that I like to include because of it's flexibility.
 
 ###### Nginx Module Reference
-Since we're compiling Nginx from source, we're going to be taking advantage of the fact that we can trim some default modules that I don't think I'll use. For your reference, we've included some helpful links that will get you up to speed on Nginx modules. If there's a module that you'd like to add to the Nginx build, you can add it to the compile-nginx.sh script.
+Since we're compiling Nginx from source, we're going to be taking advantage of the fact that we can trim some default modules that I don't think I'll use to keep the footprint small and the RAM usage low. I'm constantly testing with Wordpress & Laravel so I want it as skinny as possible without using another fork. For your reference, we've included some helpful links that will get you up to speed on Nginx modules. If there's a module that you'd like to add to the Nginx build, you can add it to the compile-nginx.sh script.
 
 * [Nginx: Default Modules](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/#modules-built-by-default)
 * [Nginx: Non-default Modules](https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/#modules_not_default)
@@ -67,56 +67,87 @@ In the future, you can restart Nginx by typing `sudo service nginx restart`.
 
 Double check that we've got everything installed correctly by using the `nginx -Vv` command. This will also list all installed modules and your OpenSSL version.
 
-##### **Creating Directories and Setting Permissions**
-Here we're going to ensure that the right folders are in place for our config.
-```
-sudo mkdir -p /var/www/html
-sudo mkdir -p /var/lib/nginx/fastcgi
-sudo mkdir -p /etc/nginx/ssl
-sudo mkdir -p /etc/nginx/conf.d
-sudo mkdir -p /var/cache/nginx
-sudo mkdir -p /var/log/domains
-sudo chown -hR www-data:www-data /var/log/domains
-```
 ----------
 
 ### **PHP 7**
-With Nginx out of the way, it's time to install PHP 7.2. We're going to be using Ondřej Surý's repository for this, as the official Ubuntu repository does not have what we're looking for.
+I use PHP 7.2 so I'll have to install from Ondřej Surý's repository as the official Ubuntu repository does not have the most recent version. PHP 7.2 Does not have the mcrypt library in the repo. Some **WordPress** themes and plugins still use mcrypt. If you need it I suggest the following how-to: [Stack Overflow: Issue in installing php7.2-mcrypt](https://stackoverflow.com/questions/48275494/issue-in-installing-php7-2-mcrypt)
 ```
 sudo add-apt-repository ppa:ondrej/php
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C
 sudo apt update && sudo apt upgrade
-sudo apt install php7.2 php7.2-cli php7.2-common php7.2-curl php7.2-fpm php7.2-gd php-imagick php7.2-intl php7.2-json php7.2-mbstring php7.2-mysql php7.2-opcache php-pear php7.2-readline php7.2-soap php7.2-tidy php7.2-xml php7.2-xmlrpc php7.2-xsl php7.2-zip
+sudo apt install php7.2 php7.2-fpm php7.2-mysql php7.2-gd php7.2-cli php7.2-xml php7.2-mbstring php7.2-soap php7.2-curl php7.2-opcache php-pear php7.2-common php-imagick php7.2-intl php7.2-json php7.2-readline php7.2-tidy php7.2-xmlrpc php7.2-xsl php7.2-zip
 ```
 ##### **Configuring PHP.ini**
 
-With PHP 7.2 installed, we'll want to make some changes to the **php.ini** configuration file. Our goal here is to raise the timeouts and max file sizes for the site. In addition, you'll want to pay close attention to the `memory_limit` setting and set it accordingly. If you're not sure, `256M` is a very safe value.
+With PHP 7.2 installed, I'm going to make some changes to  the **php.ini** config. Our goal here is to raise the timeouts and max file sizes for the site. In addition, you'll want to pay close attention to the `memory_limit` setting and set it accordingly. If you're not sure, `256M` is a very safe value.
 ```
 sudo nano /etc/php/7.2/fpm/php.ini
 ```
 Locate the settings below and change their values to reflect the higher values listed. You may need to adjust the values for your specific site.
+```shell
+user_ini.filename = # 173 Prevents overrides
+max_execution_time = 120 # line 383
+max_input_time = 120 # line 393
+max_input_vars = 5000 # line 400
+memory_limit = 256M # line 404
+post_max_size = 64M # line 672
+upload_max_filesize = 64M # line 825
+date.timezone = America/Chicago # line 939 proper timestamps in OPCache
 ```
-upload_max_filesize = 32M
-post_max_size = 32M
-memory_limit = 256M
-max_execution_time = 120
-max_input_vars = 10000
-max_input_time = 120
-```
-Keep **php.ini** open since we'll still need it in the next section below.
+#### **PHP-FPM**
+The changes we make for PHP-FPM are always going to be up to how many hits the site will take and the stability of the PHP-FPM daemon. There are several discussions on how best to tweak the ```/etc/php/7.2/fpm/pool.d/www.conf``` file. I find that there is a sweet spot on differing setups. I'll be working on keeping things running with a minimal hit on ram. The key here is whether or not to spawn children dynamically or on demand. My config works for me in low memory environments on SSDs. That said I'll change ```/etc/php/7.2/fpm/pool.d/www.conf``` with the following values. Make sure within the config the user is set to www-data in my current setup. Starting at about line 141 there's useful documentation about setting up a slow log for debugging purposes. If you're a geek tweaker like me you might take a try at turning these settings on to see exactly what PHP-FPM is doing.
 
+``` shell
+user = www-data #line 23
+group = www-data #line 24
+listen.owner = www-data # line 50
+listen.group = www-data # line 51
+pm = ondemand # line 102
+pm.max_children = 50 # line 113
+;pm.start_servers = 2 # line 118
+;pm.min_spare_servers = 1 # line 123
+;pm.max_spare_servers = 3 # line 128
+pm.process_idle_timeout = 10s; #line 133
+pm.max_requests = 500 # line 139
+```
+##### **PHP-FPM.CONF**
+Per the great guide at [TweakedIO](http://www.tweaked.io/guide/nginx/) I like to change the php-fpm.conf to globally set PHP-FPM to restart upon random failure. I don't do this until I've debugged and examined/tested every setting. Open up ```/etc/php/7.2/fpm/php-fpm.conf```.
+```shell
+emergency_restart_threshold = 10 # line 48
+emergency_restart_interval = 1m # line 56
+process_control_timeout = 10s # line 62
+```
+Before we make other changes to PHP I always check to see if the basic configuration is good.
+```shell
+php-fpm7.2 -t
+```
+Hopefully you'll see the following. If not, wash, rinse repeat.
+```shell
+[04-Aug-2018 14:07:38] NOTICE: configuration file /etc/php/7.2/fpm/php-fpm.conf test is successful
+```
 ##### **OPcache**
-We're going to utilize OPcache to greatly increase the performance of PHP. Since OPcache stores scripts in memory, however, the needs of your site could greatly differ from the next person's site. To learn more about tuning OPCache for your specific needs, read [Fine-Tune Your Opcache Configuration to Avoid Caching Suprises](https://tideways.io/profiler/blog/fine-tune-your-opcache-configuration-to-avoid-caching-suprises). You can more learn about every available OPcache setting by visiting [PHP.net](http://php.net/manual/en/opcache.configuration.php.).
+We're going to utilize OPcache to greatly increase the performance of PHP. Since OPcache stores scripts in memory, however, the needs of your site could greatly differ from the next person's site. To learn more about tuning OPCache for your specific needs, read [Fine-Tune Your Opcache Configuration to Avoid Caching Suprises](https://tideways.io/profiler/blog/fine-tune-your-opcache-configuration-to-avoid-caching-suprises). You can more learn about every available OPcache setting by visiting [PHP.net](http://php.net/manual/en/opcache.configuration.php.). We also want to follow best practices for [WordPress setups](https://github.com/ataylorme/WordPress-Hosting-Best-Practices-Documentation/blob/master/security/security.md#opcache-security). There are also some great tools to to monitor OPcache on GitHub.
+* [A one-page opcache status page by rlerdorf](https://github.com/rlerdorf/opcache-status)
+* [A clean, effective and responsive interface for Zend OPcache by amnuts](https://github.com/amnuts/opcache-gui)
+* [GUI for PHP's OpCache by PeeHaa (my personal favorite)](https://github.com/PeeHaa/OpCacheGUI)
 
-Still editing **php.ini**, look for the lines below. Remember that you'll need to uncomment the lines by removing the `;`.
+This is where I'll stray from most LEMP tutorials. You can make these changes in ```php.ini``` but since our modified PHP configuration is working I'll stay out of any PHP configs and work on the OPcache Module configs. Drop into ```/etc/php/7.2/mods-available``` and create a file named ```custom-opcache.ini```. Add the following:
 ```
-opcache.enable = 1
-opcache.enable_cli = 1
-opcache.interned_strings_buffer = 16
-opcache.max_accelerated_files = 10000
-opcache.memory_consumption = 128
-opcache.revalidate_freq = 300
-opcache.save_comments = 0
+opcache.validate_permission = On
+opcache.validate_root = On
+opcache.restrict_api = '/home'
+opcache.memory_consumption=128
+opcache.max_accelerated_files=8000 ; find this value by running find project/ -iname *.php|wc -l
+opcache.enable_cli=1
+opcache.validate_timestamps=0
+; logs
+opcache.error_log='/var/log/opcache.log'
+opcache.log_verbosity_level=2
+```
+I'll symlink this config to the proper directories.
+```shell
+ln -s /etc/php/7.2/mods-available/custom-opcache.ini /etc/php/7.2/fpm/conf.d/99-custom-opcache.ini
+ln -s /etc/php/7.2/mods-available/custom-opcache.ini /etc/php/7.2/cli/conf.d/99-custom-opcache.ini
 ```
 Restart PHP and we're done.
 ```

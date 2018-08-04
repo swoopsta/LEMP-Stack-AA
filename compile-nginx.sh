@@ -474,6 +474,8 @@ case $OPTION in
 			echo ""
 			exit 1
 		fi
+		# Creating Nginx Directories-----------------------------------------------------------
+		echo -ne "       Creating Nginx Directories              [..]\r"
 		# Add an init script for systemd and logrotate------------------------------
 		# Using my systemd script and logrotate conf
 		if [[ ! -e /lib/systemd/system/nginx.service ]]; then
@@ -492,13 +494,42 @@ case $OPTION in
 		if [[ ! -d /var/cache/nginx ]]; then
 			mkdir -p /var/cache/nginx
 		fi
-		# Make sites directories per Nginx best practices
-		# Note: Will add my own conf files & directories here soon
+		# FastCGI
+		if [[ ! -d /var/lib/nginx/fastcgi ]]; then
+			mkdir -p /var/lib/nginx/fastcgi
+		fi
+		# Creating Nginx directories for configs
+		# This file structure works best with multiple configs
 		if [[ ! -d /etc/nginx/sites-available ]]; then
 			mkdir -p /etc/nginx/sites-available
 		fi
 		if [[ ! -d /etc/nginx/sites-enabled ]]; then
 			mkdir -p /etc/nginx/sites-enabled
+		fi
+		if [[ ! -d /etc/nginx/conf.d ]]; then
+			mkdir -p /etc/nginx/conf.d
+		fi
+		if [[ ! -d /etc/nginx/globals ]]; then
+			mkdir -p /etc/nginx/globals
+		fi
+		if [[ ! -d /etc/nginx/scripts ]]; then
+			mkdir -p /etc/nginx/scripts
+		fi
+		if [[ ! -d /etc/nginx/errors ]]; then
+			mkdir -p /etc/nginx/errors
+		fi
+		if [[ ! -d /var/www/html ]]; then
+			mkdir -p /var/www/html
+			chown -hR www-data -R /var/www/html
+		if [ $? -eq 0 ]; then
+			echo -ne "       Creating Nginx Directories              [${CGREEN}OK${CEND}]\r"
+			echo -ne "\n"
+		else
+			echo -e "       Creating Nginx Directories              [${CRED}FAIL${CEND}]"
+			echo ""
+			echo "Please look at /tmp/nginx-compile.log"
+			echo ""
+			exit 1
 		fi
 		# Restart Nginx-------------------------------------------------------------
 		echo -ne "       Restarting Nginx               [..]\r"
